@@ -38,27 +38,32 @@ body {
 /* Header */
 .header {
   background: var(--white);
-  border-bottom: 3px solid var(--orange);
+  border-bottom: 1px solid var(--gray-200);
   padding: 0 2rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 64px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   position: sticky;
   top: 0;
   z-index: 100;
 }
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .header-logo {
-  height: 32px;
+  height: 36px;
   width: auto;
-  margin-right: 14px;
   flex-shrink: 0;
 }
 .header-text {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 .header-title {
   font-size: 18px;
@@ -66,10 +71,40 @@ body {
   color: var(--gray-900);
 }
 .header-subtitle {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--gray-600);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.header-brand-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+.header-brand-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-600);
+  letter-spacing: 0.5px;
+}
+.header-version {
+  background: var(--orange);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
 /* Layout */
@@ -450,10 +485,19 @@ body {
 <body>
 
 <header class="header">
-  <img class="header-logo" src="/static/logo.png" alt="inMapper">
-  <div class="header-text">
-    <div class="header-title">ID Assigner</div>
-    <div class="header-subtitle">SVG ID Assignment Tool</div>
+  <div class="header-left">
+    <img class="header-logo" src="/static/logo.png" alt="inMapper">
+    <div class="header-text">
+      <div class="header-title">ID Assigner</div>
+      <div class="header-subtitle">SVG ID Assignment Tool</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-brand">
+      <img class="header-brand-icon" src="/static/logo.png" alt="">
+      <span class="header-brand-text">inMapper</span>
+    </div>
+    <span class="header-version">v1.0</span>
   </div>
 </header>
 
