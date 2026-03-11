@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ID Assigner</title>
+<title>ID Assigner — inMapper</title>
+<link rel="icon" type="image/png" href="/static/logo.png">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -48,20 +49,28 @@ body {
   z-index: 100;
 }
 .header-logo {
-  width: 36px; height: 36px;
-  background: var(--orange);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: white; font-weight: 800; font-size: 18px;
-  margin-right: 12px;
+  height: 32px;
+  width: auto;
+  margin-right: 14px;
   flex-shrink: 0;
 }
+.header-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
 .header-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--gray-900);
 }
-.header-title span { color: var(--orange); }
+.header-subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--gray-600);
+  letter-spacing: 0.3px;
+}
 
 /* Layout */
 .container {
@@ -441,8 +450,11 @@ body {
 <body>
 
 <header class="header">
-  <div class="header-logo">ID</div>
-  <div class="header-title">ID <span>Assigner</span></div>
+  <img class="header-logo" src="/static/logo.png" alt="inMapper">
+  <div class="header-text">
+    <div class="header-title">ID Assigner</div>
+    <div class="header-subtitle">SVG ID Assignment Tool</div>
+  </div>
 </header>
 
 <div class="container">
