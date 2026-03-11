@@ -1,0 +1,4 @@
+lxml>=6.0
+fastapi
+uvicorn[standard]
+python-multipart

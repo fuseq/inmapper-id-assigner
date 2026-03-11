@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+.idea/
+.cursor/
+.git/
+*.tsv
+*.json
+*_output*.svg
+output_*.svg
+*.md
+analyze_keywords.py
+compute_area_size.py
+fetch_participants.py
+idex_appscript.js

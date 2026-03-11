@@ -1,0 +1,40 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data files (project-specific, not needed for deployment)
+participants.json
+unit_ids.txt
+unit_ids.json
+*.tsv
+
+# SVG files (input & output)
+*.svg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scripts not needed for web app
+analyze_keywords.py
+compute_area_size.py
+fetch_participants.py
+idex_appscript.js
+
+# Cursor
+.cursor/

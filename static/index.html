@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ID Assigner</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --orange: #F57C00;
+  --orange-light: #FFB74D;
+  --orange-dark: #E65100;
+  --orange-bg: #FFF3E0;
+  --white: #FFFFFF;
+  --gray-50: #FAFAFA;
+  --gray-100: #F5F5F5;
+  --gray-200: #EEEEEE;
+  --gray-300: #E0E0E0;
+  --gray-400: #BDBDBD;
+  --gray-600: #757575;
+  --gray-800: #424242;
+  --gray-900: #212121;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --transition: 0.2s ease;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--white);
+  border-bottom: 3px solid var(--orange);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  height: 64px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  width: 36px; height: 36px;
+  background: var(--orange);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 18px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+.header-title span { color: var(--orange); }
+
+/* Layout */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.5rem;
+  min-height: calc(100vh - 64px);
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  padding: 1rem 1.25rem;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-600);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-body { padding: 1.25rem; }
+
+/* Sidebar */
+.sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius);
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--gray-50);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--orange);
+  background: var(--orange-bg);
+}
+.upload-zone.has-file {
+  border-color: var(--orange);
+  border-style: solid;
+  background: var(--orange-bg);
+}
+.upload-zone input { display: none; }
+.upload-icon {
+  font-size: 40px;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+.upload-zone:hover .upload-icon,
+.upload-zone.dragover .upload-icon { color: var(--orange); }
+.upload-zone.has-file .upload-icon { color: var(--orange); }
+.upload-label {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+.upload-label strong { color: var(--orange); }
+.upload-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+/* Form controls */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group:last-child { margin-bottom: 0; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.form-input, .form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--gray-900);
+  background: var(--white);
+  transition: var(--transition);
+  outline: none;
+}
+.form-input:focus, .form-select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(245,124,0,0.12);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Checkbox */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gray-800);
+  cursor: pointer;
+  padding: 6px 0;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--orange);
+  cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+.btn-primary {
+  background: var(--orange);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245,124,0,0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--orange-dark);
+  box-shadow: 0 6px 20px rgba(245,124,0,0.4);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-secondary {
+  background: var(--white);
+  color: var(--orange);
+  border: 2px solid var(--orange);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--orange-bg);
+}
+.btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Stats panel */
+.stats {
+  display: none;
+  padding: 1rem 1.25rem;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+}
+.stats.visible { display: block; }
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.stat-row .label { color: var(--gray-600); }
+.stat-row .value { font-weight: 600; color: var(--gray-800); }
+.stat-divider {
+  border: none;
+  border-top: 1px solid var(--gray-200);
+  margin: 6px 0;
+}
+
+/* Preview area */
+.preview-area {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px - 3rem);
+}
+.preview-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--white);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.preview-tab {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: var(--transition);
+}
+.preview-tab:hover { color: var(--gray-800); }
+.preview-tab.active {
+  color: var(--orange);
+  border-bottom-color: var(--orange);
+}
+.preview-content {
+  flex: 1;
+  background: var(--white);
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.preview-pane {
+  display: none;
+  width: 100%; height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+}
+.preview-pane.active { display: flex; align-items: center; justify-content: center; }
+
+.preview-placeholder {
+  text-align: center;
+  color: var(--gray-400);
+}
+.preview-placeholder-icon {
+  font-size: 64px;
+  margin-bottom: 12px;
+}
+.preview-placeholder-text {
+  font-size: 16px;
+}
+
+.svg-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  cursor: grab;
+  background:
+    linear-gradient(45deg, var(--gray-100) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--gray-100) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--gray-100) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--gray-100) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+.svg-container:active { cursor: grabbing; }
+.svg-container svg {
+  display: block;
+  max-width: none;
+  transform-origin: 0 0;
+}
+
+/* Spinner */
+.spinner {
+  display: none;
+  width: 20px; height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-primary .spinner { display: none; }
+.btn-primary.loading .spinner { display: inline-block; }
+.btn-primary.loading .btn-text { display: none; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 20px;
+  background: var(--gray-900);
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.toast.error { background: #D32F2F; }
+
+/* Zoom controls */
+.zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+.zoom-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  transition: var(--transition);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.zoom-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.zoom-level {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  background: var(--white);
+  padding: 0 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+  .preview-area {
+    height: 60vh;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">ID</div>
+  <div class="header-title">ID <span>Assigner</span></div>
+</header>
+
+<div class="container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <!-- Upload -->
+    <div class="card">
+      <div class="card-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        SVG Upload
+      </div>
+      <div class="card-body">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept=".svg">
+          <div class="upload-icon">&#128196;</div>
+          <div class="upload-label">
+            Drag & drop your <strong>.svg</strong> file here<br>
+            or click to browse
+          </div>
+          <div class="upload-filename" id="fileName"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parameters -->
+    <div class="card">
+      <div class="card-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Parameters
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Layers</label>
+          <input type="text" class="form-input" id="layers" value="Stand, Food, Service" placeholder="Stand, Food, Service">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Font Sizes (px)</label>
+          <div class="form-row">
+            <div>
+              <input type="number" class="form-input" id="fontSmall" value="12" min="4" max="72">
+              <span style="font-size:11px;color:var(--gray-400)">Small</span>
+            </div>
+            <div>
+              <input type="number" class="form-input" id="fontMedium" value="24" min="4" max="72">
+              <span style="font-size:11px;color:var(--gray-400)">Medium</span>
+            </div>
+            <div>
+              <input type="number" class="form-input" id="fontLarge" value="36" min="4" max="72">
+              <span style="font-size:11px;color:var(--gray-400)">Large</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Rotation</label>
+          <div class="form-row-2">
+            <select class="form-select" id="rotationMode" onchange="toggleRotation()">
+              <option value="auto">Auto-detect</option>
+              <option value="manual">Manual</option>
+            </select>
+            <input type="number" class="form-input" id="rotationValue" value="0" step="0.1" disabled placeholder="degrees">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Options</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="assignDoorIds"> Assign Door IDs
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="doorLayerGroup" style="display:none">
+          <label class="form-label">Door Layer Name</label>
+          <input type="text" class="form-input" id="doorLayer" value="Doors">
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="btn-group">
+      <button class="btn btn-primary" id="processBtn" disabled onclick="processFile()">
+        <span class="btn-text">Process SVG</span>
+        <div class="spinner"></div>
+      </button>
+      <button class="btn btn-secondary" id="downloadBtn" disabled onclick="downloadFile()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Output
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="stats" id="statsPanel">
+        <div id="statsContent"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Preview -->
+  <main class="preview-area">
+    <div class="preview-tabs">
+      <button class="preview-tab active" data-tab="original" onclick="switchTab('original')">Original</button>
+      <button class="preview-tab" data-tab="processed" onclick="switchTab('processed')">Processed</button>
+    </div>
+    <div class="preview-content">
+      <div class="preview-pane active" id="pane-original">
+        <div class="preview-placeholder" id="placeholder-original">
+          <div class="preview-placeholder-icon">&#128506;</div>
+          <div class="preview-placeholder-text">Upload an SVG to preview</div>
+        </div>
+        <div class="svg-container" id="svg-original" style="display:none"></div>
+      </div>
+      <div class="preview-pane" id="pane-processed">
+        <div class="preview-placeholder" id="placeholder-processed">
+          <div class="preview-placeholder-icon">&#9881;</div>
+          <div class="preview-placeholder-text">Process the SVG to see the result</div>
+        </div>
+        <div class="svg-container" id="svg-processed" style="display:none"></div>
+      </div>
+      <div class="zoom-controls" id="zoomControls" style="display:none">
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">&minus;</button>
+        <div class="zoom-level" id="zoomLevel">100%</div>
+        <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">&plus;</button>
+        <button class="zoom-btn" onclick="zoomReset()" title="Fit">&#8634;</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let uploadedFile = null;
+let currentJobId = null;
+let zoomScale = 1;
+let activeTab = 'original';
+
+// Upload zone
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files.length > 0) handleFile(fileInput.files[0]); });
+
+function handleFile(file) {
+  if (!file.name.toLowerCase().endsWith('.svg')) {
+    showToast('Please select an .svg file', true);
+    return;
+  }
+  uploadedFile = file;
+  uploadZone.classList.add('has-file');
+  document.getElementById('fileName').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+  document.getElementById('processBtn').disabled = false;
+
+  const reader = new FileReader();
+  reader.onload = e => showSvgPreview('original', e.target.result);
+  reader.readAsText(file);
+}
+
+// Door layer toggle
+document.getElementById('assignDoorIds').addEventListener('change', e => {
+  document.getElementById('doorLayerGroup').style.display = e.target.checked ? 'block' : 'none';
+});
+
+function toggleRotation() {
+  const manual = document.getElementById('rotationMode').value === 'manual';
+  document.getElementById('rotationValue').disabled = !manual;
+}
+
+// Preview tabs
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.preview-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + tab));
+}
+
+function showSvgPreview(which, svgText) {
+  const container = document.getElementById('svg-' + which);
+  const placeholder = document.getElementById('placeholder-' + which);
+  container.innerHTML = svgText;
+  container.style.display = 'block';
+  placeholder.style.display = 'none';
+  document.getElementById('zoomControls').style.display = 'flex';
+
+  const svg = container.querySelector('svg');
+  if (svg) {
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.style.width = '100%';
+    svg.style.height = 'auto';
+  }
+}
+
+// Zoom
+function zoomIn() { setZoom(zoomScale * 1.25); }
+function zoomOut() { setZoom(zoomScale / 1.25); }
+function zoomReset() { setZoom(1); }
+
+function setZoom(s) {
+  zoomScale = Math.max(0.1, Math.min(10, s));
+  document.getElementById('zoomLevel').textContent = Math.round(zoomScale * 100) + '%';
+
+  ['original', 'processed'].forEach(which => {
+    const container = document.getElementById('svg-' + which);
+    const svg = container.querySelector('svg');
+    if (svg) {
+      svg.style.width = (100 * zoomScale) + '%';
+      svg.style.height = 'auto';
+    }
+  });
+}
+
+// Mouse wheel zoom
+document.querySelector('.preview-content').addEventListener('wheel', e => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(zoomScale * delta);
+  }
+}, { passive: false });
+
+// Process
+async function processFile() {
+  if (!uploadedFile) return;
+
+  const btn = document.getElementById('processBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  document.getElementById('downloadBtn').disabled = true;
+
+  const formData = new FormData();
+  formData.append('file', uploadedFile);
+  formData.append('layers', document.getElementById('layers').value);
+      formData.append('assign_door_ids', document.getElementById('assignDoorIds').checked);
+  formData.append('door_layer', document.getElementById('doorLayer').value);
+      formData.append('font_small', document.getElementById('fontSmall').value);
+      formData.append('font_medium', document.getElementById('fontMedium').value);
+      formData.append('font_large', document.getElementById('fontLarge').value);
+
+  const rotMode = document.getElementById('rotationMode').value;
+  formData.append('rotation', rotMode === 'auto' ? 'auto' : document.getElementById('rotationValue').value);
+
+  try {
+    const res = await fetch('/api/process', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast(data.detail || 'Processing failed', true);
+      return;
+    }
+
+    currentJobId = data.job_id;
+    showStats(data.stats, data.output_size);
+
+    const svgRes = await fetch('/api/preview/' + data.job_id);
+    const svgText = await svgRes.text();
+    showSvgPreview('processed', svgText);
+    switchTab('processed');
+
+    document.getElementById('downloadBtn').disabled = false;
+    showToast('Processed ' + data.stats.total_units + ' units successfully');
+
+  } catch (e) {
+    showToast('Connection error: ' + e.message, true);
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+// Stats
+function showStats(stats, outputSize) {
+  const panel = document.getElementById('statsPanel');
+  const content = document.getElementById('statsContent');
+  let html = '';
+
+  html += statRow('Total Units', stats.total_units);
+  if (stats.renamed_paths > 0) html += statRow('IDs Assigned', stats.renamed_paths);
+  if (stats.renamed_doors > 0) html += statRow('Door IDs', stats.renamed_doors);
+  if (stats.unmatched_doors > 0) html += statRow('Unmatched Doors', stats.unmatched_doors);
+  html += statRow('Rotation', stats.rotation_deg + '\u00B0');
+  html += statRow('Thresholds', stats.threshold_small + ' / ' + stats.threshold_large);
+  html += '<hr class="stat-divider">';
+
+  for (const [size, count] of Object.entries(stats.font_counts)) {
+    html += statRow('Font ' + size + 'px', count + ' units');
+  }
+  html += '<hr class="stat-divider">';
+
+  for (const [layer, count] of Object.entries(stats.layers_found)) {
+    html += statRow(layer, count + ' units');
+  }
+  html += '<hr class="stat-divider">';
+  html += statRow('Output Size', (outputSize / 1024).toFixed(1) + ' KB');
+
+  content.innerHTML = html;
+  panel.classList.add('visible');
+}
+
+function statRow(label, value) {
+  return '<div class="stat-row"><span class="label">' + label + '</span><span class="value">' + value + '</span></div>';
+}
+
+// Download
+function downloadFile() {
+  if (!currentJobId) return;
+  const a = document.createElement('a');
+  a.href = '/api/download/' + currentJobId;
+  a.download = 'output_' + currentJobId + '.svg';
+  a.click();
+}
+
+// Toast
+function showToast(msg, isError) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => toast.className = 'toast', 3000);
+}
+</script>
+</body>
+</html>
