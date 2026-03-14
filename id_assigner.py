@@ -660,6 +660,109 @@ def insert_writing_layer(root: etree._Element, writing: etree._Element) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Area Size computation
+# ---------------------------------------------------------------------------
+CHAR_WIDTH_RATIO = {
+    8:  0.68,
+    12: 0.66,
+    18: 0.62,
+    24: 0.58,
+    36: 0.56,
+}
+DEFAULT_CHAR_WIDTH_RATIO = 0.60
+TEXT_PADDING_FACTOR = 0.85
+
+
+def _get_char_width_ratio(font_size: int) -> float:
+    if font_size in CHAR_WIDTH_RATIO:
+        return CHAR_WIDTH_RATIO[font_size]
+    sizes = sorted(CHAR_WIDTH_RATIO.keys())
+    if font_size <= sizes[0]:
+        return CHAR_WIDTH_RATIO[sizes[0]]
+    if font_size >= sizes[-1]:
+        return CHAR_WIDTH_RATIO[sizes[-1]]
+    for i in range(len(sizes) - 1):
+        if sizes[i] <= font_size <= sizes[i + 1]:
+            t = (font_size - sizes[i]) / (sizes[i + 1] - sizes[i])
+            return CHAR_WIDTH_RATIO[sizes[i]] * (1 - t) + CHAR_WIDTH_RATIO[sizes[i + 1]] * t
+    return DEFAULT_CHAR_WIDTH_RATIO
+
+
+def _compute_oriented_extent(corners: list[tuple[float, float]], angle_deg: float) -> tuple[float, float]:
+    rad = math.radians(angle_deg)
+    cos_a, sin_a = math.cos(rad), math.sin(rad)
+    proj_text = [x * cos_a + y * sin_a for x, y in corners]
+    proj_perp = [-x * sin_a + y * cos_a for x, y in corners]
+    return max(proj_text) - min(proj_text), max(proj_perp) - min(proj_perp)
+
+
+def _get_screen_corners(bbox: BBox, transform: AffineMatrix) -> list[tuple[float, float]]:
+    corners = [
+        (bbox.min_x, bbox.min_y), (bbox.max_x, bbox.min_y),
+        (bbox.max_x, bbox.max_y), (bbox.min_x, bbox.max_y),
+    ]
+    return [transform.apply(x, y) for x, y in corners]
+
+
+@dataclass
+class UnitMetrics:
+    unit_id: str
+    text_width: float
+    font_size: int
+    char_capacity: int
+
+
+def compute_area_size_data(
+    root: etree._Element,
+    layer_names: list[str],
+    rotation_deg: float,
+    threshold_small: int,
+    threshold_large: int,
+    font_small: int,
+    font_medium: int,
+    font_large: int,
+) -> list[UnitMetrics]:
+    """Compute area size metrics for all units."""
+    metrics: list[UnitMetrics] = []
+
+    for layer_name in layer_names:
+        layer = find_layer(root, layer_name)
+        if layer is None:
+            continue
+        for path in layer.iter(f'{SVG}path'):
+            pid = path.get('id', '')
+            if not UNIT_ID_RE.match(pid):
+                continue
+            bbox = compute_bbox(path.get('d', ''))
+            if bbox is None:
+                continue
+            parent_transform = get_element_screen_transform(path, root)
+            screen_corners = _get_screen_corners(bbox, parent_transform)
+            text_w, text_h = _compute_oriented_extent(screen_corners, rotation_deg)
+            min_dim = min(text_w, text_h)
+            if min_dim <= threshold_small:
+                fs = font_small
+            elif min_dim <= threshold_large:
+                fs = font_medium
+            else:
+                fs = font_large
+            char_ratio = _get_char_width_ratio(fs)
+            avg_char_width = fs * char_ratio
+            usable_width = text_w * TEXT_PADDING_FACTOR
+            char_cap = max(1, int(usable_width / avg_char_width))
+            metrics.append(UnitMetrics(
+                unit_id=pid, text_width=round(text_w, 2),
+                font_size=fs, char_capacity=char_cap,
+            ))
+
+    def sort_key(m):
+        match = re.match(r'ID(\d+)', m.unit_id)
+        return int(match.group(1)) if match else 0
+    metrics.sort(key=sort_key)
+    return metrics
+
+
+# ---------------------------------------------------------------------------
 # Programmatic API (used by web UI)
 # ---------------------------------------------------------------------------
 @dataclass
@@ -673,6 +776,7 @@ class ProcessParams:
     font_small: int = DEFAULT_FONT_SMALL
     font_medium: int = DEFAULT_FONT_MEDIUM
     font_large: int = DEFAULT_FONT_LARGE
+    compute_area_size: bool = False
 
 
 @dataclass
@@ -687,6 +791,7 @@ class ProcessResult:
     threshold_large: int
     font_counts: dict[int, int]
     layers_found: dict[str, int]
+    area_size_data: Optional[list[dict]] = None
 
 
 def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
@@ -759,6 +864,19 @@ def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
 
     output_svg = etree.tostring(tree, xml_declaration=True, encoding='UTF-8', pretty_print=False)
 
+    area_data = None
+    if params.compute_area_size:
+        area_metrics = compute_area_size_data(
+            root, params.layers, rotation_deg,
+            t_small, t_large,
+            params.font_small, params.font_medium, params.font_large,
+        )
+        area_data = [
+            {"id": m.unit_id, "text_width": m.text_width,
+             "font_size": m.font_size, "char_capacity": m.char_capacity}
+            for m in area_metrics
+        ]
+
     return ProcessResult(
         output_svg=output_svg,
         total_units=len(units),
@@ -770,6 +888,7 @@ def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
         threshold_large=t_large,
         font_counts=font_counts,
         layers_found=layers_found,
+        area_size_data=area_data,
     )
 
 

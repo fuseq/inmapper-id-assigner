@@ -38,6 +38,7 @@ async def api_process(
     font_small: int = Form(12),
     font_medium: int = Form(24),
     font_large: int = Form(36),
+    compute_area_size: bool = Form(False),
 ):
     if not file.filename or not file.filename.lower().endswith(".svg"):
         raise HTTPException(400, "Only .svg files are accepted.")
@@ -57,6 +58,7 @@ async def api_process(
         font_small=font_small,
         font_medium=font_medium,
         font_large=font_large,
+        compute_area_size=compute_area_size,
     )
 
     try:
@@ -87,6 +89,7 @@ async def api_process(
             "layers_found": result.layers_found,
         },
         "output_size": len(result.output_svg),
+        "area_size_data": result.area_size_data,
     })
 
 

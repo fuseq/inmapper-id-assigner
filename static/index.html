@@ -426,6 +426,84 @@ body {
 }
 .toast.error { background: #D32F2F; }
 
+/* Area Size table */
+.area-size-pane {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.area-size-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.area-size-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.area-size-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+}
+.area-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.area-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-tertiary);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--border);
+}
+.area-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.area-table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+.btn-copy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-copy:hover {
+  border-color: var(--orange-primary);
+  color: var(--orange-primary);
+  background: var(--orange-bg);
+}
+.btn-copy.copied {
+  border-color: #22C55E;
+  color: #22C55E;
+  background: rgba(34,197,94,0.08);
+}
+
 /* Zoom controls */
 .zoom-controls {
   position: absolute;
@@ -576,6 +654,9 @@ body {
             <label class="checkbox-label">
               <input type="checkbox" id="assignDoorIds"> Assign Door IDs
             </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="computeAreaSize"> Compute Area Size
+            </label>
           </div>
         </div>
 
@@ -604,6 +685,7 @@ body {
         <div id="statsContent"></div>
       </div>
     </div>
+
   </aside>
 
   <!-- Preview -->
@@ -611,6 +693,7 @@ body {
     <div class="preview-tabs">
       <button class="preview-tab active" data-tab="original" onclick="switchTab('original')">Original</button>
       <button class="preview-tab" data-tab="processed" onclick="switchTab('processed')">Processed</button>
+      <button class="preview-tab" data-tab="areasize" id="areaSizeTab" style="display:none" onclick="switchTab('areasize')">Area Size</button>
     </div>
     <div class="preview-content">
       <div class="preview-pane active" id="pane-original">
@@ -626,6 +709,25 @@ body {
           <div class="preview-placeholder-text">Process the SVG to see the result</div>
         </div>
         <div class="svg-container" id="svg-processed" style="display:none"></div>
+      </div>
+      <div class="preview-pane" id="pane-areasize">
+        <div class="area-size-pane">
+          <div class="area-size-header">
+            <span class="area-size-count" id="areaSizeCount"></span>
+            <button class="btn-copy" id="copyAreaBtn" onclick="copyAreaSize()" title="Copy TSV">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy TSV
+            </button>
+          </div>
+          <div class="area-size-table-wrap">
+            <table class="area-table" id="areaTable">
+              <thead>
+                <tr><th>Birim ID</th><th>Genişlik</th><th>Font Boyutu</th><th>Karakter Kapasitesi</th></tr>
+              </thead>
+              <tbody id="areaTableBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
       <div class="zoom-controls" id="zoomControls" style="display:none">
         <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">&minus;</button>
@@ -689,6 +791,8 @@ function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.preview-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + tab));
+  const zc = document.getElementById('zoomControls');
+  if (zc) zc.style.display = (tab === 'areasize') ? 'none' : 'flex';
 }
 
 function showSvgPreview(which, svgText) {
@@ -749,6 +853,7 @@ async function processFile() {
   formData.append('file', uploadedFile);
   formData.append('layers', document.getElementById('layers').value);
       formData.append('assign_door_ids', document.getElementById('assignDoorIds').checked);
+      formData.append('compute_area_size', document.getElementById('computeAreaSize').checked);
   formData.append('door_layer', document.getElementById('doorLayer').value);
       formData.append('font_small', document.getElementById('fontSmall').value);
       formData.append('font_medium', document.getElementById('fontMedium').value);
@@ -772,7 +877,11 @@ async function processFile() {
     const svgRes = await fetch('/api/preview/' + data.job_id);
     const svgText = await svgRes.text();
     showSvgPreview('processed', svgText);
-    switchTab('processed');
+
+    showAreaSize(data.area_size_data);
+    if (!data.area_size_data || data.area_size_data.length === 0) {
+      switchTab('processed');
+    }
 
     document.getElementById('downloadBtn').disabled = false;
     showToast('Processed ' + data.stats.total_units + ' units successfully');
@@ -828,6 +937,49 @@ function downloadFile() {
 }
 
 // Toast
+// Area Size
+let areaSizeRows = [];
+
+function showAreaSize(data) {
+  const tab = document.getElementById('areaSizeTab');
+  const tbody = document.getElementById('areaTableBody');
+  const countEl = document.getElementById('areaSizeCount');
+
+  if (!data || data.length === 0) {
+    tab.style.display = 'none';
+    areaSizeRows = [];
+    return;
+  }
+
+  areaSizeRows = data;
+  tbody.innerHTML = '';
+  for (const row of data) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + row.id + '</td><td>' + row.text_width + '</td><td>' + row.font_size + '</td><td>' + row.char_capacity + '</td>';
+    tbody.appendChild(tr);
+  }
+  countEl.textContent = data.length + ' units';
+  tab.style.display = '';
+  switchTab('areasize');
+}
+
+function copyAreaSize() {
+  if (!areaSizeRows.length) return;
+  let tsv = 'Birim ID\tGeni\u015Flik\tFont Boyutu\tKarakter Kapasitesi\n';
+  for (const row of areaSizeRows) {
+    tsv += row.id + '\t' + row.text_width + '\t' + row.font_size + '\t' + row.char_capacity + '\n';
+  }
+  navigator.clipboard.writeText(tsv).then(() => {
+    const btn = document.getElementById('copyAreaBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy TSV';
+    }, 2000);
+  });
+}
+
 function showToast(msg, isError) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
