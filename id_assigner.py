@@ -464,14 +464,18 @@ def compute_placements(
     writing_inverse: AffineMatrix,
     threshold_small: int, threshold_large: int,
     font_small: int, font_medium: int, font_large: int,
+    font_overrides: Optional[dict[str, int]] = None,
 ) -> list[TextPlacement]:
     placements = []
     for unit in units:
         lx, ly = writing_inverse.apply(unit.screen_cx, unit.screen_cy)
-        font_size = determine_font_size(
-            unit.bbox, threshold_small, threshold_large,
-            font_small, font_medium, font_large,
-        )
+        if font_overrides and unit.element_id in font_overrides:
+            font_size = font_overrides[unit.element_id]
+        else:
+            font_size = determine_font_size(
+                unit.bbox, threshold_small, threshold_large,
+                font_small, font_medium, font_large,
+            )
         placements.append(TextPlacement(
             unit_id=unit.element_id,
             local_x=lx, local_y=ly,
@@ -721,6 +725,7 @@ def compute_area_size_data(
     font_small: int,
     font_medium: int,
     font_large: int,
+    font_overrides: Optional[dict[str, int]] = None,
 ) -> list[UnitMetrics]:
     """Compute area size metrics for all units."""
     metrics: list[UnitMetrics] = []
@@ -740,7 +745,9 @@ def compute_area_size_data(
             screen_corners = _get_screen_corners(bbox, parent_transform)
             text_w, text_h = _compute_oriented_extent(screen_corners, rotation_deg)
             min_dim = min(text_w, text_h)
-            if min_dim <= threshold_small:
+            if font_overrides and pid in font_overrides:
+                fs = font_overrides[pid]
+            elif min_dim <= threshold_small:
                 fs = font_small
             elif min_dim <= threshold_large:
                 fs = font_medium
@@ -777,6 +784,7 @@ class ProcessParams:
     font_medium: int = DEFAULT_FONT_MEDIUM
     font_large: int = DEFAULT_FONT_LARGE
     compute_area_size: bool = False
+    font_overrides: Optional[dict[str, int]] = None
 
 
 @dataclass
@@ -792,6 +800,7 @@ class ProcessResult:
     font_counts: dict[int, int]
     layers_found: dict[str, int]
     area_size_data: Optional[list[dict]] = None
+    font_groups: Optional[list[dict]] = None
 
 
 def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
@@ -836,8 +845,12 @@ def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
     # Auto-detect thresholds if not provided
     t_small = params.threshold_small
     t_large = params.threshold_large
+    print(f"  Thresholds from params: small={t_small}, large={t_large}")
     if t_small is None or t_large is None:
         t_small, t_large = auto_detect_thresholds(units)
+        print(f"  Auto-detected thresholds: small={t_small}, large={t_large}")
+    else:
+        print(f"  Using provided thresholds: small={t_small}, large={t_large}")
 
     writing_transform_str = build_writing_transform(existing_transform_str, rotation_deg)
     writing_matrix = AffineMatrix.from_svg_transform(writing_transform_str)
@@ -847,6 +860,7 @@ def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
         units, writing_inverse,
         t_small, t_large,
         params.font_small, params.font_medium, params.font_large,
+        font_overrides=params.font_overrides,
     )
 
     font_counts = {}
@@ -870,12 +884,15 @@ def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
             root, params.layers, rotation_deg,
             t_small, t_large,
             params.font_small, params.font_medium, params.font_large,
+            font_overrides=params.font_overrides,
         )
         area_data = [
             {"id": m.unit_id, "text_width": m.text_width,
              "font_size": m.font_size, "char_capacity": m.char_capacity}
             for m in area_metrics
         ]
+
+    fg = [{"id": p.unit_id, "font_size": p.font_size} for p in placements]
 
     return ProcessResult(
         output_svg=output_svg,
@@ -889,6 +906,7 @@ def process_svg(input_svg: bytes, params: ProcessParams) -> ProcessResult:
         font_counts=font_counts,
         layers_found=layers_found,
         area_size_data=area_data,
+        font_groups=fg,
     )
 
 

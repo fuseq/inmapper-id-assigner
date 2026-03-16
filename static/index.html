@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -58,9 +59,9 @@ body {
 
 /* Header */
 .header {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1.5rem;
+  padding: 1rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -104,12 +105,12 @@ body {
 
 /* Layout */
 .container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1rem;
   display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 300px 1fr 260px;
+  gap: 1rem;
   min-height: calc(100vh - 72px);
 }
 
@@ -316,6 +317,7 @@ body {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 64px - 3rem);
+  min-width: 0;
 }
 .preview-tabs {
   display: flex;
@@ -371,8 +373,7 @@ body {
 .svg-container {
   width: 100%;
   height: 100%;
-  overflow: auto;
-  cursor: grab;
+  overflow: hidden;
   background:
     linear-gradient(45deg, var(--gray-100) 25%, transparent 25%),
     linear-gradient(-45deg, var(--gray-100) 25%, transparent 25%),
@@ -381,11 +382,10 @@ body {
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0;
 }
-.svg-container:active { cursor: grabbing; }
 .svg-container svg {
   display: block;
-  max-width: none;
-  transform-origin: 0 0;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Spinner */
@@ -504,6 +504,144 @@ body {
   background: rgba(34,197,94,0.08);
 }
 
+/* Threshold editor */
+.threshold-row {
+  display: flex;
+  gap: 8px;
+}
+.threshold-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.threshold-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.threshold-input {
+  padding: 5px 8px !important;
+  font-size: 13px !important;
+  font-family: var(--font-mono) !important;
+  text-align: center;
+}
+.btn-threshold-apply {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  color: #fff;
+  background: var(--orange-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-threshold-apply:hover:not(:disabled) { background: var(--orange-dark); }
+.btn-threshold-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Font Groups Sidebar */
+.fg-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.fg-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+#fgGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.font-group {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.font-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.font-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.font-group-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: var(--orange-bg);
+  color: var(--orange-primary);
+  border-radius: 10px;
+}
+.font-group-search {
+  margin: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  outline: none;
+  flex-shrink: 0;
+}
+.font-group-search:focus {
+  border-color: var(--orange-primary);
+}
+.font-group-list {
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+  min-height: 40px;
+  max-height: 180px;
+}
+.font-group-list.drag-over {
+  background: var(--orange-bg);
+}
+.unit-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  margin: 2px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: grab;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.unit-chip:hover {
+  border-color: var(--orange-primary);
+  background: var(--orange-bg);
+}
+.unit-chip.dragging {
+  opacity: 0.4;
+}
+.unit-chip.hidden {
+  display: none;
+}
+
 /* Zoom controls */
 .zoom-controls {
   position: absolute;
@@ -545,6 +683,12 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1100px) {
+  .container {
+    grid-template-columns: 280px 1fr;
+  }
+  .fg-sidebar { display: none; }
+}
 @media (max-width: 900px) {
   .container {
     grid-template-columns: 1fr;
@@ -695,6 +839,7 @@ body {
       <button class="preview-tab" data-tab="processed" onclick="switchTab('processed')">Processed</button>
       <button class="preview-tab" data-tab="areasize" id="areaSizeTab" style="display:none" onclick="switchTab('areasize')">Area Size</button>
     </div>
+
     <div class="preview-content">
       <div class="preview-pane active" id="pane-original">
         <div class="preview-placeholder" id="placeholder-original">
@@ -735,8 +880,74 @@ body {
         <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">&plus;</button>
         <button class="zoom-btn" onclick="zoomReset()" title="Fit">&#8634;</button>
       </div>
+
     </div>
   </main>
+
+  <!-- Right sidebar -->
+  <aside class="fg-sidebar" id="fgSidebar">
+    <!-- Thresholds -->
+    <div class="card" id="thresholdCard">
+      <div class="card-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        Thresholds
+      </div>
+      <div class="card-body">
+        <div class="threshold-row">
+          <div class="threshold-field">
+            <label class="threshold-label">Small &le;</label>
+            <input type="number" class="form-input threshold-input" id="threshSmall" min="1" max="9999" disabled>
+          </div>
+          <div class="threshold-field">
+            <label class="threshold-label">Medium &le;</label>
+            <input type="number" class="form-input threshold-input" id="threshLarge" min="1" max="9999" disabled>
+          </div>
+        </div>
+        <button class="btn-threshold-apply" id="threshApplyBtn" disabled onclick="applyThresholds()">Apply</button>
+      </div>
+    </div>
+
+    <!-- Font Groups -->
+    <div class="card">
+      <div class="card-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        Font Groups
+      </div>
+      <div class="card-body fg-sidebar-body">
+        <div class="fg-empty" id="fgEmpty">
+          <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:2rem 1rem;">
+            Process an SVG to see font group assignments
+          </div>
+        </div>
+        <div id="fgGroups" style="display:none">
+          <div class="font-group" data-size="small">
+            <div class="font-group-header">
+              <span class="font-group-title" id="fgTitleSmall">Small (12px)</span>
+              <span class="font-group-count" id="fgCountSmall">0</span>
+            </div>
+            <input type="text" class="font-group-search" placeholder="Search..." oninput="filterGroup('small', this.value)">
+            <div class="font-group-list" id="fgListSmall"></div>
+          </div>
+          <div class="font-group" data-size="medium">
+            <div class="font-group-header">
+              <span class="font-group-title" id="fgTitleMedium">Medium (24px)</span>
+              <span class="font-group-count" id="fgCountMedium">0</span>
+            </div>
+            <input type="text" class="font-group-search" placeholder="Search..." oninput="filterGroup('medium', this.value)">
+            <div class="font-group-list" id="fgListMedium"></div>
+          </div>
+          <div class="font-group" data-size="large">
+            <div class="font-group-header">
+              <span class="font-group-title" id="fgTitleLarge">Large (36px)</span>
+              <span class="font-group-count" id="fgCountLarge">0</span>
+            </div>
+            <input type="text" class="font-group-search" placeholder="Search..." oninput="filterGroup('large', this.value)">
+            <div class="font-group-list" id="fgListLarge"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -793,52 +1004,106 @@ function switchTab(tab) {
   document.querySelectorAll('.preview-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + tab));
   const zc = document.getElementById('zoomControls');
   if (zc) zc.style.display = (tab === 'areasize') ? 'none' : 'flex';
+
+  if (pendingPanZoom[tab]) {
+    delete pendingPanZoom[tab];
+    initPanZoom(tab);
+  }
 }
+
+let panZoomInstances = {};
+let pendingPanZoom = {};
 
 function showSvgPreview(which, svgText) {
   const container = document.getElementById('svg-' + which);
   const placeholder = document.getElementById('placeholder-' + which);
+
+  if (panZoomInstances[which]) {
+    try { panZoomInstances[which].destroy(); } catch(e) {}
+    panZoomInstances[which] = null;
+  }
+
   container.innerHTML = svgText;
   container.style.display = 'block';
   placeholder.style.display = 'none';
   document.getElementById('zoomControls').style.display = 'flex';
 
-  const svg = container.querySelector('svg');
-  if (svg) {
-    svg.removeAttribute('width');
-    svg.removeAttribute('height');
-    svg.style.width = '100%';
-    svg.style.height = 'auto';
+  prepareSvgElement(container);
+
+  if (activeTab === which) {
+    initPanZoom(which);
+  } else {
+    pendingPanZoom[which] = true;
   }
 }
 
-// Zoom
-function zoomIn() { setZoom(zoomScale * 1.25); }
-function zoomOut() { setZoom(zoomScale / 1.25); }
-function zoomReset() { setZoom(1); }
+function prepareSvgElement(container) {
+  const svg = container.querySelector('svg');
+  if (!svg) return;
+  const vb = svg.getAttribute('viewBox');
+  if (!vb) {
+    const w = svg.getAttribute('width') || '800';
+    const h = svg.getAttribute('height') || '600';
+    svg.setAttribute('viewBox', '0 0 ' + parseFloat(w) + ' ' + parseFloat(h));
+  }
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+}
 
-function setZoom(s) {
-  zoomScale = Math.max(0.1, Math.min(10, s));
-  document.getElementById('zoomLevel').textContent = Math.round(zoomScale * 100) + '%';
+function initPanZoom(which) {
+  const container = document.getElementById('svg-' + which);
+  const svg = container ? container.querySelector('svg') : null;
+  if (!svg) return;
 
-  ['original', 'processed'].forEach(which => {
-    const container = document.getElementById('svg-' + which);
-    const svg = container.querySelector('svg');
-    if (svg) {
-      svg.style.width = (100 * zoomScale) + '%';
-      svg.style.height = 'auto';
-    }
+  if (panZoomInstances[which]) {
+    try { panZoomInstances[which].destroy(); } catch(e) {}
+    panZoomInstances[which] = null;
+  }
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      try {
+        panZoomInstances[which] = svgPanZoom(svg, {
+          zoomEnabled: true,
+          panEnabled: true,
+          controlIconsEnabled: false,
+          mouseWheelZoomEnabled: true,
+          dblClickZoomEnabled: true,
+          minZoom: 0.1,
+          maxZoom: 50,
+          fit: true,
+          center: true,
+          onZoom: function() { updateZoomLevel(); },
+        });
+      } catch(e) {
+        console.warn('svg-pan-zoom init failed:', e);
+      }
+    });
   });
 }
 
-// Mouse wheel zoom
-document.querySelector('.preview-content').addEventListener('wheel', e => {
-  if (e.ctrlKey || e.metaKey) {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(zoomScale * delta);
+function updateZoomLevel() {
+  const pz = panZoomInstances[activeTab];
+  if (pz) {
+    zoomScale = pz.getZoom();
+    document.getElementById('zoomLevel').textContent = Math.round(zoomScale * 100) + '%';
   }
-}, { passive: false });
+}
+
+function zoomIn() {
+  const pz = panZoomInstances[activeTab];
+  if (pz) { pz.zoomIn(); updateZoomLevel(); }
+}
+function zoomOut() {
+  const pz = panZoomInstances[activeTab];
+  if (pz) { pz.zoomOut(); updateZoomLevel(); }
+}
+function zoomReset() {
+  const pz = panZoomInstances[activeTab];
+  if (pz) { pz.resetZoom(); pz.resetPan(); pz.fit(); pz.center(); updateZoomLevel(); }
+}
 
 // Process
 async function processFile() {
@@ -873,15 +1138,15 @@ async function processFile() {
 
     currentJobId = data.job_id;
     showStats(data.stats, data.output_size);
+    setThresholds(data.stats.threshold_small, data.stats.threshold_large);
+
+    showAreaSize(data.area_size_data, false);
+    populateFontGroups(data.font_groups);
+    switchTab('processed');
 
     const svgRes = await fetch('/api/preview/' + data.job_id);
     const svgText = await svgRes.text();
     showSvgPreview('processed', svgText);
-
-    showAreaSize(data.area_size_data);
-    if (!data.area_size_data || data.area_size_data.length === 0) {
-      switchTab('processed');
-    }
 
     document.getElementById('downloadBtn').disabled = false;
     showToast('Processed ' + data.stats.total_units + ' units successfully');
@@ -940,7 +1205,7 @@ function downloadFile() {
 // Area Size
 let areaSizeRows = [];
 
-function showAreaSize(data) {
+function showAreaSize(data, autoSwitch) {
   const tab = document.getElementById('areaSizeTab');
   const tbody = document.getElementById('areaTableBody');
   const countEl = document.getElementById('areaSizeCount');
@@ -960,7 +1225,7 @@ function showAreaSize(data) {
   }
   countEl.textContent = data.length + ' units';
   tab.style.display = '';
-  switchTab('areasize');
+  if (autoSwitch !== false) switchTab('areasize');
 }
 
 function copyAreaSize() {
@@ -978,6 +1243,167 @@ function copyAreaSize() {
       btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy TSV';
     }, 2000);
   });
+}
+
+// Font Groups
+let fontGroupData = {}; // { small: [{id, font_size}], medium: [...], large: [...] }
+let fontSizes = { small: 12, medium: 24, large: 36 };
+let fontOverrides = {};
+
+function populateFontGroups(fontGroupsArr) {
+  fontSizes.small = parseInt(document.getElementById('fontSmall').value) || 12;
+  fontSizes.medium = parseInt(document.getElementById('fontMedium').value) || 24;
+  fontSizes.large = parseInt(document.getElementById('fontLarge').value) || 36;
+
+  fontGroupData = { small: [], medium: [], large: [] };
+  fontOverrides = {};
+
+  if (fontGroupsArr) {
+    for (const item of fontGroupsArr) {
+      const group = item.font_size === fontSizes.small ? 'small'
+                  : item.font_size === fontSizes.medium ? 'medium' : 'large';
+      fontGroupData[group].push(item.id);
+    }
+  }
+
+  document.getElementById('fgTitleSmall').textContent = 'Small (' + fontSizes.small + 'px)';
+  document.getElementById('fgTitleMedium').textContent = 'Medium (' + fontSizes.medium + 'px)';
+  document.getElementById('fgTitleLarge').textContent = 'Large (' + fontSizes.large + 'px)';
+
+  renderFontGroup('small');
+  renderFontGroup('medium');
+  renderFontGroup('large');
+
+  document.getElementById('fgEmpty').style.display = 'none';
+  document.getElementById('fgGroups').style.display = '';
+}
+
+function renderFontGroup(group) {
+  const list = document.getElementById('fgList' + group.charAt(0).toUpperCase() + group.slice(1));
+  const countEl = document.getElementById('fgCount' + group.charAt(0).toUpperCase() + group.slice(1));
+  const items = fontGroupData[group] || [];
+  countEl.textContent = items.length;
+
+  list.innerHTML = '';
+  for (const unitId of items) {
+    const chip = document.createElement('span');
+    chip.className = 'unit-chip';
+    chip.textContent = unitId;
+    chip.draggable = true;
+    chip.dataset.unitId = unitId;
+    chip.dataset.group = group;
+
+    chip.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', unitId);
+      e.dataTransfer.setData('source-group', group);
+      chip.classList.add('dragging');
+    });
+    chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+
+    list.appendChild(chip);
+  }
+
+  list.addEventListener('dragover', e => {
+    e.preventDefault();
+    list.classList.add('drag-over');
+  });
+  list.addEventListener('dragleave', () => list.classList.remove('drag-over'));
+  list.addEventListener('drop', e => {
+    e.preventDefault();
+    list.classList.remove('drag-over');
+    const unitId = e.dataTransfer.getData('text/plain');
+    const sourceGroup = e.dataTransfer.getData('source-group');
+    if (sourceGroup !== group) {
+      moveUnit(unitId, sourceGroup, group);
+    }
+  });
+}
+
+function moveUnit(unitId, fromGroup, toGroup) {
+  const fromList = fontGroupData[fromGroup];
+  const idx = fromList.indexOf(unitId);
+  if (idx === -1) return;
+  fromList.splice(idx, 1);
+  fontGroupData[toGroup].push(unitId);
+
+  fontOverrides[unitId] = fontSizes[toGroup];
+
+  renderFontGroup(fromGroup);
+  renderFontGroup(toGroup);
+
+  reprocessWithOverrides();
+}
+
+function filterGroup(group, query) {
+  const listId = 'fgList' + group.charAt(0).toUpperCase() + group.slice(1);
+  const chips = document.getElementById(listId).querySelectorAll('.unit-chip');
+  const q = query.toLowerCase();
+  for (const chip of chips) {
+    chip.classList.toggle('hidden', !chip.textContent.toLowerCase().includes(q));
+  }
+}
+
+async function reprocessWithOverrides() {
+  if (!currentJobId) return;
+
+  const payload = {};
+  if (Object.keys(fontOverrides).length > 0) {
+    payload.font_overrides = fontOverrides;
+  }
+  const ts = document.getElementById('threshSmall').value;
+  const tl = document.getElementById('threshLarge').value;
+  if (ts) payload.threshold_small = parseInt(ts);
+  if (tl) payload.threshold_large = parseInt(tl);
+
+  try {
+    const res = await fetch('/api/reprocess/' + currentJobId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.detail || 'Reprocessing failed', true);
+      return;
+    }
+
+    showStats(data.stats, data.output_size);
+    showAreaSize(data.area_size_data, false);
+    populateFontGroups(data.font_groups);
+    setThresholds(data.stats.threshold_small, data.stats.threshold_large);
+
+    switchTab('processed');
+    const svgRes = await fetch('/api/preview/' + data.job_id);
+    const svgText = await svgRes.text();
+    showSvgPreview('processed', svgText);
+
+  } catch (e) {
+    showToast('Reprocess error: ' + e.message, true);
+  }
+}
+
+function updateFontGroupCounts(areaSizeData) {
+  if (!areaSizeData) return;
+  for (const group of ['small', 'medium', 'large']) {
+    const countEl = document.getElementById('fgCount' + group.charAt(0).toUpperCase() + group.slice(1));
+    countEl.textContent = (fontGroupData[group] || []).length;
+  }
+}
+
+// Threshold editor
+function setThresholds(small, large) {
+  const sEl = document.getElementById('threshSmall');
+  const lEl = document.getElementById('threshLarge');
+  sEl.value = small;
+  lEl.value = large;
+  sEl.disabled = false;
+  lEl.disabled = false;
+  document.getElementById('threshApplyBtn').disabled = false;
+}
+
+function applyThresholds() {
+  fontOverrides = {};
+  reprocessWithOverrides();
 }
 
 function showToast(msg, isError) {
